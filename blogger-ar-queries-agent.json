@@ -1,0 +1,446 @@
+{
+  "name": "blogger-ar-queries-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Use Gemini tools and Perplexity Deep Search to gather the 20 most common and emerging search queries that Arabs in MENA are asking about psychology, neuroscience, productivity, relationships, quirky science, and everyday health. \n\nSteps you must follow:\n1. Run Perplexity Deep Search to surface authoritative, up-to-date, source-backed queries.\n2. Cross-check with Gemini tools for additional signals:\n   - Google Trends style data (focused on Arab countries).\n   - Autocomplete predictions for psychology, health, and productivity-related searches.\n   - Social discussions and news signals (especially from the Arab region).\n3. Filter your results to reflect what is culturally relevant and practically interesting for Arab readers.\n4. Balance the results:\n   - At least 14 queries should be evergreen (timeless, always relevant).\n   - At least 6 query should be trending (current year, viral, new research).\n5. Enforce the structure:\n   - Each query is 2–5 words maximum.\n   - No duplication or overlapping queries.\n   - No vague queries; every query should be precise and meaningful.\n   - All queries must be plain English and formatted as if a person typed them into a search bar.  \n   - All queries must avoid any Arab words but focus on recent scientific research that reflects pressing inquiries by Arabs in the Middle East and MENA.\n\nFinal Output:\n- Return exactly 20 distinct queries.\n- Format them strictly as JSON array of strings only, for example:\n\n[\n  \"phone addiction teenagers\",\n  \"dopamine and motivation\",\n  \"stress and heart health\",\n  ...\n]\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Research Agent tasked with discovering the exact search queries and trending questions circulating among Arab internet users in the Middle East and North Africa (MENA). \n\nYou have access to two research capabilities:\n1. Gemini Tools (for trend analysis, autocomplete, and broad web exploration).\n2. Perplexity Deep Search (for authoritative, source-backed, fresh discovery of queries and information).\n\nYou must actively leverage both Gemini and Perplexity Deep Search to produce the most accurate and culturally relevant results. \n\nYour mandate:\n- Identify what Arabs are curious about in psychology, neuroscience, habits, relationships, productivity, quirky science, and everyday health.\n- Capture their curiosity at the \"Google search bar\" level — how people in Egypt, Saudi Arabia, UAE, Morocco, Jordan, Yemen, etc. actually phrase their searches.\n- Queries should reflect culturally relevant anxieties and interests (e.g., sleep fasting Ramadan, social media addiction, work stress, parenting, brain health).\n- Your job is to surface queries that Arabs want answers to, so that Western research can be used to answer them.\n\nDemographic and context:\n- Focus on the interests of Arab audiences, especially in the Middle East and North Africa (MENA).\n- Consider linguistic and cultural differences in search behavior compared to Western audiences.\n- Queries should align with how Arab readers might frame their curiosity when consuming or searching for science applied to daily life.\n\nStrict constraints:\n- You do NOT write essays, summaries, or explanations.\n- You ONLY output search queries.\n- Each query must be plain English, between 2 and 5 words long.\n- Queries must be written exactly as if a user typed them into Google.\n- Maintain a 70% / 30% balance between evergreen queries (timeless topics: sleep, habits, stress, relationships, memory) and trending queries (recent events, viral debates, new research studies).\n- Remove duplicates, near-duplicates, and overly vague queries (\"science news\" is too broad).\n- Avoid subjective or colloquial phrases (“cool science fact”).\n- Respect the target demographic: queries should be globally understandable but filtered through relevance to Arab audiences.\n\nOutput format:\n- Always return exactly 20 queries.\n- Format as a strict JSON array of strings, nothing else.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        -16
+      ],
+      "id": "c4402d49-749c-4fa3-98a0-b6e0675ef682",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "sonar-deep-research",
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        496,
+        208
+      ],
+      "id": "cb48fee6-434b-4e18-a598-909d0ddfb1c5",
+      "name": "Message a model in Perplexity",
+      "credentials": {
+        "perplexityApi": {
+          "id": "TITils0JCZnwOZh6",
+          "name": "Perplexity account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  \"how memory works\",\n  \"effects of stress brain\",\n  \"importance of sleep cycles\",\n  \"mindfulness for anxiety\",\n  \"food and mood link\",\n  \"decision fatigue explained\",\n  \"ai impact on psychology\",\n  \"latest caffeine research\",\n  \"social media and focus\",\n  \"placebo effect examples\",\n  \"music and concentration\",\n  \"why we forget names\"\n]\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        208
+      ],
+      "id": "5279e1b9-1389-41cf-97e5-39cff167a883",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Prompt', ``, 'string') }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGeminiTool",
+      "typeVersion": 1,
+      "position": [
+        624,
+        208
+      ],
+      "id": "535e2cb3-1cc4-4ad5-bb1b-121adce34838",
+      "name": "Message a model in Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "P3mK4ic9oGuCQIkt",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        208
+      ],
+      "id": "417125d2-7ac7-46e3-b02b-6f00a210c748",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appaFDRabgietKFbv",
+          "mode": "list",
+          "cachedResultName": "Arabic Pop‑Science Blogger",
+          "cachedResultUrl": "https://airtable.com/appaFDRabgietKFbv"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblxtBmI40QXGhbrv",
+          "mode": "list",
+          "cachedResultName": "Queries",
+          "cachedResultUrl": "https://airtable.com/appaFDRabgietKFbv/tblxtBmI40QXGhbrv"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "freshness",
+              "displayName": "freshness",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "daily",
+                  "value": "daily"
+                },
+                {
+                  "name": "weekly",
+                  "value": "weekly"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "new",
+                  "value": "new"
+                },
+                {
+                  "name": "fetched",
+                  "value": "fetched"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_run_at",
+              "displayName": "last_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_log",
+              "displayName": "error_log",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "webhook_button",
+              "displayName": "webhook_button",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "created",
+              "displayName": "created",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1312,
+        -16
+      ],
+      "id": "bad0f85a-eb24-4fae-b14a-16c4e9a0d8e9",
+      "name": "Create or update a record",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "eVJPgWHKJZk5xM80",
+          "name": "Airtable Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -16
+      ],
+      "id": "94fb0a48-e785-4a42-a537-87cf90f49272",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "path": "get-queries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "49af99e7-67c7-4f77-bb8c-dc48e18980c5",
+      "name": "Webhook",
+      "webhookId": "7839bcaa-057f-4f7d-8f12-fa7eb859e7f0"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        208
+      ],
+      "id": "537bed86-81e0-43b9-bb29-613d08ad08f2",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "dYXYGy9BnbrJ2qrZ",
+          "name": "Anthropic account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Message a model in Perplexity": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Google Gemini": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "519c1958-da60-4d19-9c9b-59717e214494",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "240d8996fe8245c3de427e15e2737fb523afc9defdf970b7c608e464462ed77f"
+  },
+  "id": "vEVjkobnBFEOTqc7",
+  "tags": [
+    {
+      "createdAt": "2025-08-18T17:55:41.898Z",
+      "updatedAt": "2025-08-18T17:55:41.898Z",
+      "id": "EUKwT7uVNpnTlUZS",
+      "name": "ar"
+    },
+    {
+      "createdAt": "2025-08-18T17:55:44.293Z",
+      "updatedAt": "2025-08-18T17:55:44.293Z",
+      "id": "xMapEQuyklGausID",
+      "name": "blogger"
+    }
+  ]
+}

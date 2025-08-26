@@ -1,0 +1,797 @@
+{
+  "name": "blogger-ar-fetch-articles",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ar-blog-fetch-articles",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1024,
+        384
+      ],
+      "id": "1aeb4364-5d68-4981-872c-89941bf40f51",
+      "name": "Webhook",
+      "webhookId": "55bd3657-c420-448a-8437-9348c6cb4bb7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3112159-4c95-4a04-9976-d8cabd23c2e6",
+              "name": "record_id",
+              "value": "={{ $json.query.recordId }}",
+              "type": "string"
+            },
+            {
+              "id": "29c83322-de4f-4b75-ad7e-65ecd2949a2f",
+              "name": "trace_id",
+              "value": "={{ $json.query.traceId }}",
+              "type": "string"
+            },
+            {
+              "id": "44c2b6b4-b298-406e-befe-186658a19d7b",
+              "name": "freshness",
+              "value": "={{ $json.query.freshness }}",
+              "type": "string"
+            },
+            {
+              "id": "24ad9a29-4706-4acb-a602-b40541170744",
+              "name": "query",
+              "value": "={{ $json.query.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        384
+      ],
+      "id": "c7a8e45e-58ab-46c7-a123-12cf2c36bfc5",
+      "name": "Set Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+            },
+            {
+              "name": "cx",
+              "value": "c4aae610fd0bf4291"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.query }} (site:psychologytoday.com) (inurl:/blog/ OR inurl:/20) -inurl:/therapists/ -inurl:/psychiatrists/ -inurl:/groups/ -inurl:/treatment/ -inurl:/profile/ -inurl:/tests/ -intitle:\"Find a Therapist\" (study OR \"new research\" OR explained OR analysis OR review OR evidence)"
+            },
+            {
+              "name": "dateRestrict",
+              "value": "d7"
+            },
+            {
+              "name": "sort",
+              "value": "date"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        16
+      ],
+      "id": "0aeedfcc-7add-4a53-8efc-27c74b1a8846",
+      "name": "Get psychologytoday Articles"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const searchItems = item.json.items || [];\n  const searchQuery = item.json.queries?.request?.[0]?.searchTerms || 'N/A';\n  for (const searchItem of searchItems) {\n    const snippetText = searchItem.snippet || '';\n    const wordCount = snippetText.split(/\\s+/).filter(word => word.length > 0).length;\n    \n    results.push({\n      url: searchItem.link,\n      search_query: searchQuery,\n      site: searchItem.displayLink,\n      title: searchItem.title,\n      author: searchItem.pagemap?.metatags?.[0]?.['og:site_name'] || 'Unknown',\n      published_at: searchItem.pagemap?.metatags?.[0]?.['og:updated_time'] || 'N/A',\n      image_url: searchItem.pagemap?.cse_image?.[0]?.src || 'N/A',\n      article_html: searchItem.htmlSnippet || 'N/A',\n      word_count: wordCount,\n      description: searchItem.pagemap?.metatags?.[0]?.['og:description'] || 'N/A'\n    });\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "d089f341-c854-47c2-af8d-07014bea4cce",
+      "name": "Code",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appaFDRabgietKFbv",
+          "mode": "list",
+          "cachedResultName": "Arabic Pop‑Science Blogger",
+          "cachedResultUrl": "https://airtable.com/appaFDRabgietKFbv"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblyca8aUOii72AOO",
+          "mode": "list",
+          "cachedResultName": "Articles-ma3l0mah",
+          "cachedResultUrl": "https://airtable.com/appaFDRabgietKFbv/tblyca8aUOii72AOO"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "search_query": "={{ $('Set Fields').item.json.query }}",
+            "site": "={{ $json.site }}",
+            "url": "={{ $json.url }}",
+            "title": "={{ $json.title }}",
+            "description": "={{ $json.description }}",
+            "author": "={{ $json.author }}",
+            "published_at": "={{ $json.published_at }}",
+            "image_url": "={{ $json.image_url }}",
+            "article_html": "={{ $json.article_html }}",
+            "word_count": "={{ $json.word_count }}"
+          },
+          "matchingColumns": [
+            "url"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "search_query",
+              "displayName": "search_query",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "published_at",
+              "displayName": "published_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "article_html",
+              "displayName": "article_html",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "word_count",
+              "displayName": "word_count",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "new",
+                  "value": "new"
+                },
+                {
+                  "name": "posted",
+                  "value": "posted"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "enriched",
+                  "value": "enriched"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blog_post_url",
+              "displayName": "blog_post_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blog_post_id",
+              "displayName": "blog_post_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_log",
+              "displayName": "error_log",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "webhook_button",
+              "displayName": "webhook_button",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "created",
+              "displayName": "created",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        352
+      ],
+      "id": "629e10f5-2185-4760-a46e-62318f650267",
+      "name": "Upsert Articles Records",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "eVJPgWHKJZk5xM80",
+          "name": "Airtable Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+            },
+            {
+              "name": "cx",
+              "value": "c4aae610fd0bf4291"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.query }} (site:greatergood.berkeley.edu) (inurl:/article/) -inurl:/podcast/ -inurl:/podcasts/ -inurl:/video/ -inurl:/event/ (study OR \"new research\" OR explained OR analysis OR review OR evidence)"
+            },
+            {
+              "name": "dateRestrict",
+              "value": "d7"
+            },
+            {
+              "name": "sort",
+              "value": "date"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        208
+      ],
+      "id": "d2dd52a7-e8aa-466a-a09a-16cb533e75a4",
+      "name": "Get bigthink Articles"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+            },
+            {
+              "name": "cx",
+              "value": "c4aae610fd0bf4291"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.query }} (site:scientificamerican.com) (inurl:/article/ OR inurl:/science/ OR inurl:/mind/ OR inurl:/health/ OR inurl:/technology/) -inurl:/podcast/ -inurl:/video/ -inurl:/slideshow/ -inurl:/audio/ -inurl:/newsletter/ -inurl:/photography/ (study OR \"new research\" OR explained OR analysis OR review OR evidence)"
+            },
+            {
+              "name": "dateRestrict",
+              "value": "d7"
+            },
+            {
+              "name": "sort",
+              "value": "date"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        400
+      ],
+      "id": "1ac4665f-7435-477d-b25e-be5312838aef",
+      "name": "Get scientificamerican Articles"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+            },
+            {
+              "name": "cx",
+              "value": "c4aae610fd0bf4291"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.query }} (site:livescience.com) (inurl:/science/ OR inurl:/health/ OR inurl:/human-body/ OR inurl:/technology/ OR inurl:/space/ OR inurl:/planet-earth/ OR inurl:/animals/ OR inurl:/archaeology/) -inurl:/video/ -inurl:/picture/ -inurl:/images/ -inurl:/gallery/ -inurl:/live-updates/ -inurl:/deals/ -inurl:/best/ -inurl:/how-to/ (study OR \"new research\" OR explained OR analysis OR review OR evidence)"
+            },
+            {
+              "name": "dateRestrict",
+              "value": "d7"
+            },
+            {
+              "name": "sort",
+              "value": "date"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        592
+      ],
+      "id": "6e4aa22c-7554-45d4-b5e7-a36d9270d779",
+      "name": "Get livescience Articles"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+            },
+            {
+              "name": "cx",
+              "value": "c4aae610fd0bf4291"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.query }} (site:bigthink.com) (inurl:/science/ OR inurl:/mind-brain/ OR inurl:/the-learning-curve/ OR inurl:/starts-with-a-bang/) -inurl:/videos/ -inurl:/podcasts/ -inurl:/plus/ (study OR \"new research\" OR explained OR analysis OR review OR evidence)"
+            },
+            {
+              "name": "dateRestrict",
+              "value": "d7"
+            },
+            {
+              "name": "sort",
+              "value": "date"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        784
+      ],
+      "id": "69b0b687-5d16-4afd-9f1a-09273734618d",
+      "name": "Get bigthink Articles1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const searchItems = item.json.items || [];\n  const searchQuery = item.json.queries?.request?.[0]?.searchTerms || 'N/A';\n  for (const searchItem of searchItems) {\n    const snippetText = searchItem.snippet || '';\n    const wordCount = snippetText.split(/\\s+/).filter(word => word.length > 0).length;\n    \n    results.push({\n      url: searchItem.link,\n      search_query: searchQuery,\n      site: searchItem.displayLink,\n      title: searchItem.title,\n      author: searchItem.pagemap?.metatags?.[0]?.['og:site_name'] || 'Unknown',\n      published_at: searchItem.pagemap?.metatags?.[0]?.['og:updated_time'] || 'N/A',\n      image_url: searchItem.pagemap?.cse_image?.[0]?.src || 'N/A',\n      article_html: searchItem.htmlSnippet || 'N/A',\n      word_count: wordCount,\n      description: searchItem.pagemap?.metatags?.[0]?.['og:description'] || 'N/A'\n    });\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        208
+      ],
+      "id": "8bee21ae-f95d-4c9e-af6c-1fcdbe7ba12a",
+      "name": "Code1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const searchItems = item.json.items || [];\n  const searchQuery = item.json.queries?.request?.[0]?.searchTerms || 'N/A';\n  for (const searchItem of searchItems) {\n    const snippetText = searchItem.snippet || '';\n    const wordCount = snippetText.split(/\\s+/).filter(word => word.length > 0).length;\n    \n    results.push({\n      url: searchItem.link,\n      search_query: searchQuery,\n      site: searchItem.displayLink,\n      title: searchItem.title,\n      author: searchItem.pagemap?.metatags?.[0]?.['og:site_name'] || 'Unknown',\n      published_at: searchItem.pagemap?.metatags?.[0]?.['og:updated_time'] || 'N/A',\n      image_url: searchItem.pagemap?.cse_image?.[0]?.src || 'N/A',\n      article_html: searchItem.htmlSnippet || 'N/A',\n      word_count: wordCount,\n      description: searchItem.pagemap?.metatags?.[0]?.['og:description'] || 'N/A'\n    });\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        400
+      ],
+      "id": "9967d0b9-869c-42f7-9818-cfd2b5e6014b",
+      "name": "Code2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const searchItems = item.json.items || [];\n  const searchQuery = item.json.queries?.request?.[0]?.searchTerms || 'N/A';\n  for (const searchItem of searchItems) {\n    const snippetText = searchItem.snippet || '';\n    const wordCount = snippetText.split(/\\s+/).filter(word => word.length > 0).length;\n    \n    results.push({\n      url: searchItem.link,\n      search_query: searchQuery,\n      site: searchItem.displayLink,\n      title: searchItem.title,\n      author: searchItem.pagemap?.metatags?.[0]?.['og:site_name'] || 'Unknown',\n      published_at: searchItem.pagemap?.metatags?.[0]?.['og:updated_time'] || 'N/A',\n      image_url: searchItem.pagemap?.cse_image?.[0]?.src || 'N/A',\n      article_html: searchItem.htmlSnippet || 'N/A',\n      word_count: wordCount,\n      description: searchItem.pagemap?.metatags?.[0]?.['og:description'] || 'N/A'\n    });\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        592
+      ],
+      "id": "4d612776-99b9-407c-a192-288e36e7c879",
+      "name": "Code3",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const searchItems = item.json.items || [];\n  const searchQuery = item.json.queries?.request?.[0]?.searchTerms || 'N/A';\n  for (const searchItem of searchItems) {\n    const snippetText = searchItem.snippet || '';\n    const wordCount = snippetText.split(/\\s+/).filter(word => word.length > 0).length;\n    \n    results.push({\n      url: searchItem.link,\n      search_query: searchQuery,\n      site: searchItem.displayLink,\n      title: searchItem.title,\n      author: searchItem.pagemap?.metatags?.[0]?.['og:site_name'] || 'Unknown',\n      published_at: searchItem.pagemap?.metatags?.[0]?.['og:updated_time'] || 'N/A',\n      image_url: searchItem.pagemap?.cse_image?.[0]?.src || 'N/A',\n      article_html: searchItem.htmlSnippet || 'N/A',\n      word_count: wordCount,\n      description: searchItem.pagemap?.metatags?.[0]?.['og:description'] || 'N/A'\n    });\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        784
+      ],
+      "id": "4c0704d4-7de6-429f-ae7e-2dc0b2bb7b5e",
+      "name": "Code4",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Fields": {
+      "main": [
+        [
+          {
+            "node": "Get psychologytoday Articles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get bigthink Articles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get scientificamerican Articles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get livescience Articles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get bigthink Articles1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get psychologytoday Articles": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Upsert Articles Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get bigthink Articles": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get scientificamerican Articles": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get livescience Articles": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get bigthink Articles1": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Upsert Articles Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Upsert Articles Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Upsert Articles Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Upsert Articles Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4eac66e9-0d4b-4693-bbe2-7719c68e7c2d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "240d8996fe8245c3de427e15e2737fb523afc9defdf970b7c608e464462ed77f"
+  },
+  "id": "MrFmvhRm5DFNypEa",
+  "tags": [
+    {
+      "createdAt": "2025-08-18T17:55:41.898Z",
+      "updatedAt": "2025-08-18T17:55:41.898Z",
+      "id": "EUKwT7uVNpnTlUZS",
+      "name": "ar"
+    },
+    {
+      "createdAt": "2025-08-18T17:55:44.293Z",
+      "updatedAt": "2025-08-18T17:55:44.293Z",
+      "id": "xMapEQuyklGausID",
+      "name": "blogger"
+    }
+  ]
+}

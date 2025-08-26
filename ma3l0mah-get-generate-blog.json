@@ -1,0 +1,718 @@
+{
+  "name": "ma3l0mah-get-generate-blog",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const query = item.json.query || {};\n  const rawPublishedAt = query.published_at;\n  const publishedAt = rawPublishedAt && rawPublishedAt !== 'N/A' && !isNaN(new Date(rawPublishedAt).getTime()) ? new Date(rawPublishedAt).toISOString() : null;\n\n  results.push({\n    url: query.url || 'N/A',\n    search_query: query.search_query || 'N/A',\n    site: query.site || 'N/A',\n    title: query.title || 'N/A',\n    author: query.author || 'Unknown',\n    published_at: publishedAt,\n    image_url: query.image_url || 'N/A',\n    article_html: query.article_html || 'N/A',\n    word_count: query.word_count || 0,\n    description: query.description || 'N/A'\n  });\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -128
+      ],
+      "id": "234e65af-9019-49f8-96ca-97ae9071e0bc",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "path": "ma3l0mah-get-generate-blog",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        -128
+      ],
+      "id": "687e2c8e-2200-4159-8d98-4df351fd5de9",
+      "name": "Webhook1",
+      "webhookId": "4af5063a-24f0-4f77-a2c6-8fc7bf77e281"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer fc-8cd136a16f5f4e93b2b0921177f9a10b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.url }}\",\n  \"formats\": [\"html\", \"links\", \"json\"],\n  \"onlyMainContent\": true,\n  \"waitFor\": 6000,\n  \"removeBase64Images\": true,\n  \"blockAds\": true,\n  \"proxy\": \"auto\",\n  \"storeInCache\": true,\n  \"jsonOptions\": {\n    \"prompt\": \"Extract the main article text\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        -128
+      ],
+      "id": "d77bd7f3-ef77-4d4a-a2a4-a4781de0632d",
+      "name": "Firecrawl - Scrape1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.data.metadata.title }}"
+            },
+            {
+              "name": "per_page",
+              "value": "2"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "VY4o1fkU9AxhSktSBEyRjCILszIUquK1xGaIKBlBTa4khLzYsiTLUsLl"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "03f52dda-122c-4f8e-b451-4894aa0d5cea",
+      "name": "Genarate image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        464,
+        -128
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=**Create a slug, blog post title, and meta description for the following blog post:**\n{{ $('Firecrawl - Scrape1').item.json.data.metadata.title }}\n**Slug Guidelines:**\n- Keep it concise (4-5 words maximum).\n- Include the primary keyword related to general tech enthousiasts in the MiddleEast.\n- Use hyphens to separate words.\n- Avoid unnecessary words, articles, or prepositions.\n- Ensure it reflects the main topic of the blog post.\n- Make it readable and relevant for both users and search engines.\n- Ensure your ouput is a semantic traslation of the English content into arabic. It must capture the nuance in the article and be a reflection of the cotext, rather than a mere translation.\n\n**Title Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Avoid using a colon (:) in the title.\n- Never structure it as a primary/secondary title separated by a colon.\n- Clearly inform users what they can expect from reading the blog post.\n- Be concise and engaging, ideally 50-60 characters long.\n- Incorporate power words that appeal to Arab audience who is concerned about technlogy and AI in particular.\n\n**Meta Description Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Be concise: Limit to 150-160 characters to ensure full visibility in search results.\n- Include keywords: Naturally incorporate primary recruitment-related keywords to enhance relevance and visibility.\n- Provide value: Clearly convey the benefits or insights readers will gain from the article.\n- Be engaging: Use action-oriented language or a thought-provoking question to encourage clicks.\n- Align with content: Accurately reflect the blog post's content to meet user expectations and reduce bounce rates.\n\n\nYour output must be a single valid JSON object with these 3 fields:\n-slug: The slug\n-title: The blog post title\n-meta: The meta description  \n\nEach should be presented without any additional text, explanation, quotation marks, or formatting.\n",
+        "options": {}
+      },
+      "id": "37b470e9-740d-4a7e-9ba5-0239a369c441",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        688,
+        -128
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        768,
+        96
+      ],
+      "id": "8da8fc59-38e9-413c-afcb-465d97373d50",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "P3mK4ic9oGuCQIkt",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        96
+      ],
+      "id": "b90267c0-1a5d-413b-9dc9-9876233422b4",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "P3mK4ic9oGuCQIkt",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawInput = $input.first().json.output;\nconst cleaned = rawInput.replace(/```json|```/g, '').trim();\nconst jsonObject = JSON.parse(cleaned);\nreturn [jsonObject];\n"
+      },
+      "id": "069fa364-2cd7-44dc-ab25-71dc2376a49e",
+      "name": "Parsing",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1040,
+        -128
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0afb2988-1481-4b04-b16d-fb33c50a16d0",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.output.replaceAll('```html', '').replaceAll('```','') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e0b36907-85fd-47dc-809c-e7ef99a9241a",
+      "name": "Cleanup HTML ",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2064,
+        -128
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/blogger/v3/blogs/95933005606168419/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"kind\": \"blogger#post\",\n  \"blog\": {\n    \"id\": \"95933005606168419\"\n  },\n  \"title\": \"{{ $('Parsing').first().json.title }}\",\n  \"content\": \"{{ $json.content.replaceAll(\"\\n\",\"\").replaceAll(\"\\\"\",\"\\'\").replaceAll('>        <',\"\").replaceAll('>    <',\"\").split(\"\\n\\n\") }}\"\n\n} ",
+        "options": {}
+      },
+      "id": "62ad1be2-3dbb-4054-9b8b-d70bef539796",
+      "name": "Post in Blogger",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2640,
+        -128
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "aEe1Qd8TNGZ1gCvA",
+          "name": "Blogger API"
+        },
+        "oAuth2Api": {
+          "id": "HdaiXBJ8HzsMDDZa",
+          "name": "Blogger/alda.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You have access to the blog article HTML under {{$json.content}}.  \nYour task: Create a Telegram post in Arabic (RTL) that is attention-grabbing, curiosity-driven, and encourages the reader to visit:  \n- Website: https://ma3l0mah.blogspot.com/ (always embedded under the brand name \"Ma3lOmah\" / \"مَعلومة\")  \n- Telegram group: https://t.me/+6l8KoWhskL5iMDg0 (always embedded under the brand name \"Ma3lOmah\" / \"مَعلومة\")  \n\n====================================================================\nOUTPUT RULES\n====================================================================\n\n**Language & Style**  \n- Write in Arabic (mix casual Arabizi + playful MSA for clarity).  \n- Personality = “Curious Guide”: ask questions like “ماذا لو؟” / “هل تعلم؟” to spark curiosity.  \n- Sound like a friendly peer, not a lecturer.  \n- Stay culturally grounded, relevant to Arab daily life.  \n\n**Structure**  \n- Length: 70–120 words.  \n- Start with a curiosity hook (surprising fact or playful question).  \n- Summarize 1–2 key insights from {{$json.content}}.  \n- End with a clear CTA:  \n  “⬇️ للمزيد زور [Ma3lOmah](https://ma3l0mah.blogspot.com/)”  \n- Also always add the group invite link under the same brand name:  \n  “انضم لمجتمع [مَعلومة](https://t.me/+6l8KoWhskL5iMDg0)”  \n\n**Tags**  \n- Add 8–12 hashtags mixing Arabic + English.  \n- First 3 hashtags must be topic-specific (e.g., #حساسية_الأطفال #PeanutAllergy #صحة).  \n- Avoid overly generic tags (#Life, #Fun).  \n\n====================================================================\nOUTPUT FORMAT\n====================================================================\n\n{{ [POST] }}\nFinal post text in Arabic (RTL), with Arabizi + MSA, including embedded links for:  \n- Website under Ma3lOmah / مَعلومة  \n- Group under Ma3lOmah / مَعلومة  \n\n{{ [TAGS] }}\n#وسم1 #وسم2 #وسم3 #...\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2288,
+        224
+      ],
+      "id": "ab3e32fb-3234-4f18-9e4c-f57e27747cb9",
+      "name": "Telegram Post Maker"
+    },
+    {
+      "parameters": {
+        "chatId": "=-4852811241",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2640,
+        128
+      ],
+      "id": "8df12cf7-1853-4938-9750-fc308163ef9c",
+      "name": "Send Ma3l0mah",
+      "webhookId": "2490f564-f60f-4972-bccc-f1822b16a8d4",
+      "credentials": {
+        "telegramApi": {
+          "id": "JdIyI7L7eMUrAQsJ",
+          "name": "Telegram Ma3l0mah"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1002050854381",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2640,
+        320
+      ],
+      "id": "faed7720-c1a7-4f6c-a39f-03769ae7cc8c",
+      "name": "Send Ma3anGroeien",
+      "webhookId": "b4f7cd66-f328-4573-8888-cc6f1c735c80",
+      "credentials": {
+        "telegramApi": {
+          "id": "JdIyI7L7eMUrAQsJ",
+          "name": "Telegram Ma3l0mah"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "aldalali.com@gmail.com",
+        "subject": "Review Article!",
+        "message": "={{ $json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2352,
+        -320
+      ],
+      "id": "412a2885-3909-40e4-89cc-2c499ab7743b",
+      "name": "Send a message",
+      "webhookId": "f98f3657-05d1-49a9-89c9-fc1176049093",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "dPCAuh7O5gMNP7z8",
+          "name": "Gmail / .com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        -128
+      ],
+      "id": "bd914720-6772-4842-b7f8-048bd26dddee",
+      "name": "Wait",
+      "webhookId": "2f93d0d8-fea9-4ce5-bc99-427b81aa08c6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1840,
+        -128
+      ],
+      "id": "d0de2367-8d76-44e8-b5c2-01c8cab88894",
+      "name": "Wait1",
+      "webhookId": "10e4047e-131e-4c1a-b1b1-383cf74c3c4d"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2352,
+        -128
+      ],
+      "id": "9c3b3630-5a63-4657-80d1-db2620a3214c",
+      "name": "Wait2",
+      "webhookId": "3dea60df-3496-4628-b9f3-236d0de2d523"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Act as a professional Arabic pop-science blogger, SEO specialist, and Generative Engine Optimization (GEO) expert. \nProduce a ~1,000-word blog post in Arabic (RTL) that connects scientific findings to everyday Arab life. \nThe output must be strictly formatted, Blogger-compatible HTML following the rules below. \nPreserve ALL original facts, information, and URLs exactly as provided. Do not invent, infer, or modify data. \nFavor clarity, logical flow, high information density, and accessibility—define jargon simply. \nUse generative techniques to keep tone engaging, culturally relevant, and semantically optimized for search engines. \n\n====================================================================\nSEO & LINKING RULES\n====================================================================\n\n- Blog Post Title: {{ $('Parsing').first().json.title }}\n- Focus Keyword: {{ $('Parsing').first().json.meta }}\n- Related Keywords: {{ $('Parsing').first().json.meta }}\n\nMandatory keyword linking (use EXACT HTML, no changes):\n\n<a href=\"{{ $('Firecrawl - Scrape1').item.json.data.metadata['og:url'] }}\" target=\"_blank\"><strong>{{ $('Parsing').first().json.meta }}</strong></a>\n\n- Apply the anchor exactly once in the article body.\n- Use the focus keyword as the anchor text ({{ $('Parsing').first().json.meta }}).\n- The URL must be the original article link ({{ $('Firecrawl - Scrape1').item.json.data.metadata['og:url'] }}).\n- Do not use any other fixed or external URLs.\n\nStrict link handling:\n- Only use URLs provided in the original article input.\n- Preserve all original URLs exactly as given (no edits, no shortening, no substitutions).\n- All <a> tags must use absolute hrefs beginning with http:// or https://.\n- Always embed links in descriptive anchor text; never display naked URLs inside the body text.\n- Mandatory keyword anchors must appear exactly once each using this format:\n<a href=\"original-url\" target=\"_blank\"><strong>Anchor Text</strong></a>\n- Apply this same style consistently for all links throughout the article.\n- Integrate links naturally into sentences for reader clarity (e.g., \"حسب دراسة منشورة في <a href='original-url' target='_blank'><strong>Nature</strong></a>\").\n- If a valid URL is not available, cite the source by title only without hyperlink.\n- Inline English words, jargon, or URLs inside Arabic text must be wrapped in:\n<span dir=\"ltr\">EnglishTermOrURL</span>\n- Final section “المصادر” must include a bullet list of:\n    - The original article link:\n    {{ $('Firecrawl - Scrape1').item.json.data.metadata['og:url'] }}\n    - All sublinks from the original article:\n    {{ $('Firecrawl - Scrape1').item.json.data.links }}\n\n====================================================================\nCONTENT STRUCTURE (IN EXACT ORDER)\n====================================================================\n\nWrap the entire blog post in:\n<div dir=\"rtl\"> ... </div>\n\n1. Title (H2) — curiosity-driven, includes focus keyword.  \n2. Estimated Reading Time (e.g., “5–7 دقائق قراءة”).  \n3. Key Takeaways — 3–5 plain-language bullets.  \n4. Table of Contents — must be anchor-linked and presented as a clear, multi-line list for readability. Each entry must be on its own line, formatted using <ul> and <li> elements.\nExample structure:\n<ul>\n  <li><a href=\"#h-hook\">السؤال الذي يغيّر نظرتك</a></li>\n  <li><a href=\"#h-why-it-matters\">لماذا يهمك هذا الموضوع؟</a></li>\n  <li><a href=\"#h-what-the-science-says\">ماذا تقول الأبحاث؟</a></li>\n</ul>\n\n5. Main Content (sections in this exact order):  \n\n    H2 (id=\"h-hook\") — السؤال الذي يغيّر نظرتك \n    • Use intechangable equivalents of this heading H2\n    • One-paragraph provocative hook with stat or study, focus keyword included.  \n\n    H2 (id=\"h-why-it-matters\") — لماذا يهمك هذا الموضوع؟ \n    • Use intechangable equivalents of this heading H2\n    • Bulleted scenarios showing relevance to Arab family, school, work, money, health.  \n\n    H2 (id=\"h-what-the-science-says\") — ماذا تقول الأبحاث؟  \n    • Use intechangable equivalents of this heading H2\n    • 3–5 H3 findings. Each must include:  \n      - Study year  \n      - Sample size/setting  \n      - Journal/source name  \n      - One-line practical takeaway  \n      - Preserved original URL (<a href=\"original-url\">Source</a>)  \n\n    H2 (id=\"h-how-it-works\") — كيف تعمل الآلية؟  \n    • Use intechangable equivalents of this heading H2\n    • Simple analogy or stepwise explanation.  \n    • Insert image exactly as:  \n      <img src=\"{{ $('Genarate image').item.json.photos[0].src.original }}\"/>  \n\n    H2 (id=\"h-apply-today\") — جرّب الآن (خطوات عملية)\n    • Use intechangable equivalents of this heading H2\n    • 3–5 numbered/bulleted micro-actions.  \n    • Each measurable, low-effort, with one practical tip.  \n\n    H2 (id=\"h-myths-facts\") — خرافات وحقائق \n    • Use intechangable equivalents of this heading H2\n    • Bullet list or <table> with Myth → Fact.  \n    • Each fact anchored to preserved original source URL.  \n\n    H2 (id=\"h-risks-limits\") — المخاطر والقيود العلمية \n    • Use intechangable equivalents of this heading H2\n    • Discuss uncertainties, sample limits, and misinterpretations.  \n\n    H2 (id=\"h-use-cases\") — استخدامات في الحياة اليومية \n    • Use intechangable equivalents of this heading H2\n    • Three H3 subsections (students, employees, parents).  \n    • Each with one scenario tied to source info.  \n\n    H2 (id=\"h-arab-context\") — السياق العربي \n    • Use intechangable equivalents of this heading H2\n    • Cultural/regional nuances (schools, workplaces, habits).  \n\n    H2 (id=\"h-key-terms\") — مصطلحات أساسية باختصار  \n    • Use intechangable equivalents of this heading H2\n    • 4–6 glossary entries (term in bold + plain definition).  \n\n    H2 (id=\"h-faqs\") — أسئلة شائعة  \n    • Use intechangable equivalents of this heading H2\n    • 4–6 concise Q&As. Cite sources where relevant.  \n\n    H2 (id=\"h-conclusion\") — الخلاصة والدعوة للتجربة \n    • Use intechangable equivalents of this heading H2\n    • 2–3 sentences with main insight + invitation to act/share.  \n\n    H2 (id=\"h-sources\") — المصادر  \n    • Bullet list of ALL sources and sublinks from input.  \n    • Format: - <a href=\"original-url\">Source Title</a>. If no URL is provided, list the title without a hyperlink.  \n    • Mandatory: include {{ $('Firecrawl - Scrape1').item.json.data.metadata['og:url'] }} and all {{ $('Firecrawl - Scrape1').item.json.data.links }}  \n\n    Optional secondary image:  \n    <img src=\"{{ $('Genarate image').item.json.photos[1].src.original }}\"/>  \n\n====================================================================\nSTYLING RULES\n====================================================================\n\nPlace this at top of <div dir=\"rtl\">:\n\n<style>\nbody { font-family: 'Arial', sans-serif !important; line-height: 1.6 !important; color: #333 !important; }\nh2, h3 { color: #000 !important; border-bottom: 2px solid #00c2ff !important; padding-bottom: 10px !important; margin-top: 30px !important; margin-bottom: 20px !important; }\na { color: #00c2ff !important; text-decoration: none !important; }\na:hover { text-decoration: underline !important; }\nul, ol { margin-left: 20px !important; }\nli { margin-bottom: 8px !important; }\nblockquote { border-left: 4px solid #00c2ff !important; padding-left: 15px !important; margin-left: 0 !important; font-style: italic !important; }\ntable { border-collapse: collapse !important; width: 100% !important; }\nth, td { border: 1px solid #ddd !important; padding: 8px !important; text-align: right !important; }\n</style>\n\nExtra formatting rules:\n- Insert <br><br> between each major section.  \n- Use <strong>, <em>, <ul>/<ol>, <li>, <blockquote> appropriately.  \n- Use <blockquote> to highlight specific quotes or key findings from studies.\n- No emojis.  \n- Maintain paragraphs (<p>) for readability. \n- Maintain proper whitespace and paragraph structure for readability.  \n- Avoid using tables at all times.\n\nOUTPUT RULES\n====================================================================\n\n- Output must begin directly with Blogger-compatible HTML (no explanations or comments).  \n- Follow section order exactly; do not add, remove, or reorder sections.  \n- Approximate length: ~1,000 words (excluding HTML tags).  \n- Preserve ALL source facts/URLs exactly as given.  \n- Apply mandatory keyword anchors at least once each.  \n- Ensure all <a> tags have valid absolute href attributes.  \n- Ensure every H2/H3 section that needs linking has a descriptive id=\"h-*\".  \n- Verify final output is self-contained and ready for Blogger.  ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        -128
+      ],
+      "id": "c5bcc457-7cca-435c-97b5-b05a325eff23",
+      "name": "Blog Maker"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        2368,
+        448
+      ],
+      "id": "268809ad-1111-48a7-8130-2618e3a022b5",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "dYXYGy9BnbrJ2qrZ",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appaFDRabgietKFbv",
+          "mode": "list",
+          "cachedResultName": "Arabic Pop‑Science Blogger",
+          "cachedResultUrl": "https://airtable.com/appaFDRabgietKFbv"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmFkcpLLgzMKAnF",
+          "mode": "list",
+          "cachedResultName": "Blogs",
+          "cachedResultUrl": "https://airtable.com/appaFDRabgietKFbv/tblmFkcpLLgzMKAnF"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "blog_id": "={{ $json.blog.id }}",
+            "url": "={{ $json.url }}",
+            "title": "={{ $json.title }}",
+            "blog_html": "={{ $json.content }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "blog_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "blog_id",
+              "displayName": "blog_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blog_html",
+              "displayName": "blog_html",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2864,
+        -128
+      ],
+      "id": "5f7e2f30-3068-4bf2-aa36-c4d80709f619",
+      "name": "Create or update a record",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "eVJPgWHKJZk5xM80",
+          "name": "Airtable Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Firecrawl - Scrape1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl - Scrape1": {
+      "main": [
+        [
+          {
+            "node": "Genarate image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genarate image": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parsing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Blog Maker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsing": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup HTML ": {
+      "main": [
+        [
+          {
+            "node": "Telegram Post Maker",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post in Blogger": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Post Maker": {
+      "main": [
+        [
+          {
+            "node": "Send Ma3l0mah",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Ma3anGroeien",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Blog Maker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Cleanup HTML ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Post in Blogger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Blog Maker": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Telegram Post Maker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "18faf2eb-7051-41c1-807b-a523a10c67b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "240d8996fe8245c3de427e15e2737fb523afc9defdf970b7c608e464462ed77f"
+  },
+  "id": "dKJpJz0Kz1yU3H2w",
+  "tags": [
+    {
+      "createdAt": "2025-08-18T17:55:41.898Z",
+      "updatedAt": "2025-08-18T17:55:41.898Z",
+      "id": "EUKwT7uVNpnTlUZS",
+      "name": "ar"
+    },
+    {
+      "createdAt": "2025-08-18T17:55:44.293Z",
+      "updatedAt": "2025-08-18T17:55:44.293Z",
+      "id": "xMapEQuyklGausID",
+      "name": "blogger"
+    }
+  ]
+}
