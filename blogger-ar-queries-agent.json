@@ -290,7 +290,11 @@
     {
       "parameters": {
         "path": "get-queries",
-        "options": {}
+        "options": {
+          "handshake": true,
+          "authentication": "headerAuth"
+        },
+        "httpMethod": "POST"
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,

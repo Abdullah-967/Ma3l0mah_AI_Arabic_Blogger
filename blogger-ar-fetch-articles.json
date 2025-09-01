@@ -4,7 +4,11 @@
     {
       "parameters": {
         "path": "ar-blog-fetch-articles",
-        "options": {}
+        "options": {
+          "handshake": true,
+          "authentication": "headerAuth"
+        },
+        "httpMethod": "POST"
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -65,11 +69,11 @@
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+              "value": "{{ $('YOUR_GOOGLE_API_CREDENTIAL').json.api_key }}"
             },
             {
               "name": "cx",
-              "value": "c4aae610fd0bf4291"
+              "value": "{{ $('YOUR_GOOGLE_SEARCH_ENGINE_ID').json.cx }}"
             },
             {
               "name": "q",
@@ -394,11 +398,11 @@
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+              "value": "{{ $('YOUR_GOOGLE_API_CREDENTIAL').json.api_key }}"
             },
             {
               "name": "cx",
-              "value": "c4aae610fd0bf4291"
+              "value": "{{ $('YOUR_GOOGLE_SEARCH_ENGINE_ID').json.cx }}"
             },
             {
               "name": "q",
@@ -437,11 +441,11 @@
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+              "value": "{{ $('YOUR_GOOGLE_API_CREDENTIAL').json.api_key }}"
             },
             {
               "name": "cx",
-              "value": "c4aae610fd0bf4291"
+              "value": "{{ $('YOUR_GOOGLE_SEARCH_ENGINE_ID').json.cx }}"
             },
             {
               "name": "q",
@@ -480,11 +484,11 @@
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+              "value": "{{ $('YOUR_GOOGLE_API_CREDENTIAL').json.api_key }}"
             },
             {
               "name": "cx",
-              "value": "c4aae610fd0bf4291"
+              "value": "{{ $('YOUR_GOOGLE_SEARCH_ENGINE_ID').json.cx }}"
             },
             {
               "name": "q",
@@ -523,11 +527,11 @@
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyDYbCef0pQauDI-pfSBYVjQisP8pev-8N0"
+              "value": "{{ $('YOUR_GOOGLE_API_CREDENTIAL').json.api_key }}"
             },
             {
               "name": "cx",
-              "value": "c4aae610fd0bf4291"
+              "value": "{{ $('YOUR_GOOGLE_SEARCH_ENGINE_ID').json.cx }}"
             },
             {
               "name": "q",

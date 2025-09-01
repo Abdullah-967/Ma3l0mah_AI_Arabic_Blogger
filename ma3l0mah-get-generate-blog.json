@@ -17,7 +17,11 @@
     {
       "parameters": {
         "path": "ma3l0mah-get-generate-blog",
-        "options": {}
+        "options": {
+          "handshake": true,
+          "authentication": "headerAuth"
+        },
+        "httpMethod": "POST"
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -38,7 +42,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer fc-8cd136a16f5f4e93b2b0921177f9a10b"
+              "value": "Bearer {{ $('YOUR_FIRECRAWL_API_CREDENTIAL').json.api_key }}"
             }
           ]
         },
@@ -77,7 +81,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "VY4o1fkU9AxhSktSBEyRjCILszIUquK1xGaIKBlBTa4khLzYsiTLUsLl"
+              "value": "{{ $('YOUR_PEXELS_API_CREDENTIAL').json.api_key }}"
             }
           ]
         },
